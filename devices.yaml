@@ -4,11 +4,3 @@
   password: admin
   secret: admin
   timeout: 10
-
-- device_type: huawei
-  host: 192.168.103.14
-  username: admin5
-  password: Node1234
-  secret: admin
-  timeout: 10
-
