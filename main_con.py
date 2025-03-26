@@ -13,7 +13,7 @@
 
 
 """
-import yaml
+#import yaml
 import csv
 
 #from netmiko import Netmiko
@@ -34,11 +34,21 @@ def send_show_command(device, command):
             #print(error)
             print('Device ip = ' + device['host'] + ' not avaliable')
 
-def send_conf_commands(device, commands):
+def send_conf_commands_h(device, commands):
     try:
         with Netmiko(**device) as ssh:
             ssh.enable()
-            out = ssh.send_config_set(commands)
+            out = ssh.send_config_set(commands, cmd_verify=False)
+            return out
+    except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
+            #print(error)
+            print('Device ip = ' + device['host'] + ' not avaliable')
+
+def send_conf_commands(device, commands, cmd_verify=True):
+    try:
+        with Netmiko(**device) as ssh:
+            ssh.enable()
+            out = ssh.send_config_set(commands, cmd_verify=cmd_verify)
             return out
     except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
             #print(error)
@@ -53,11 +63,19 @@ if __name__ == "__main__":
     
     commands_http_cisco = ["no ip http server", "no ip http secure-server"]
     
-    admin_pass = ['username admin5 privilege 15 secret 5 $1$Gjzn$4rU4sT5jxTlWIjEg7KpaE.',
+    admin_pass_cisco = ['username admin5 privilege 15 secret 5 $1$Gjzn$4rU4sT5jxTlWIjEg7KpaE.',
 'username admin1 privilege 15 secret 5 $1$7tVe$zu4W6hdA2oI.BDnOw6YMC0',
 'username admin3 privilege 15 secret 5 $1$8Fsa$fEmKDnhNa8kOhSd/3fpo2.',
 'username admintech privilege 15 secret 5 $1$M8sM$ybMAjGn1wjOl1SYBiOD2f.',
 'username admin10 privilege 15 secret 5 $1$uT7n$FEJJCjF6B3hJ0gocEacl4.'
+        ]
+    admin_pass_huawei = [
+        "aaa",
+ "local-user admin1 password irreversible-cipher $1a$n$GIY3Q_o=$2cDkY$~9Q&IxJ+9`Bbs$E!m1V*-!PSnF04\"uYZhY$",
+ "local-user admin3 password irreversible-cipher $1a$heT,;vA_j$$:h.nSn){\M;tcrN]S:T:4><qWYwL',XyrY>Vi,&($",
+ "local-user admin5 password irreversible-cipher $1a$k9J&\"9Ts[O$n$jjO\"f1+Ii2k$1bcCEL~s'GD:lzN$|!7)Qg%c4&$",
+ "local-user admin10 password irreversible-cipher $1a$L,yjSWRs6X$AJ\"kCFd|H)v2D_RDlwUO#6SmDMy8^,:PyhB2Ho}'$",
+ "local-user admintech password irreversible-cipher $1a$v|R5Hod@c!$P)8gU+-#<\"Gq&$+Oaa'\"@J}M/S2bX83*yUG{$rc1$"
         
         ]
     
@@ -71,24 +89,16 @@ if __name__ == "__main__":
         reader = csv.DictReader(file, fieldnames=headers)  # задаём ключи вручную
         devices = [row for row in reader]
 
-
-       
-    
-    
-    
-    
-    
-    
-    #with open("devices.yaml") as f:
-    #    devices = yaml.safe_load(f)
     for dev in devices:
-        print(dev)
+        #print(dev)
         if dev['device_type'] == 'eltex':
             print(send_show_command(dev, "show run | i admin"))
 
         elif dev['device_type'] == 'huawei':
-            print(send_show_command(dev, command_hu))
+            #print(send_show_command(dev, command_hu))
+            send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
+            print("DONE")
         elif dev['device_type'] == 'cisco_ios':
-            #print(send_show_command(dev, "show run | i admin"))
-            send_conf_commands(dev, commands_http_cisco)
-            send_conf_commands(dev, admin_pass)
+            print(send_show_command(dev, "show run | i admin"))
+            #send_conf_commands(dev, commands_http_cisco)
+            #send_conf_commands(dev, admin_pass)
