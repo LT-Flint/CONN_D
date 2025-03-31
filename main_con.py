@@ -34,15 +34,6 @@ def send_show_command(device, command):
             #print(error)
             print('Device ip = ' + device['host'] + ' not avaliable')
 
-def send_conf_commands_h(device, commands):
-    try:
-        with Netmiko(**device) as ssh:
-            ssh.enable()
-            out = ssh.send_config_set(commands, cmd_verify=False)
-            return out
-    except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
-            #print(error)
-            print('Device ip = ' + device['host'] + ' not avaliable')
 
 def send_conf_commands(device, commands, cmd_verify=True):
     try:
@@ -78,8 +69,19 @@ if __name__ == "__main__":
  "local-user admintech password irreversible-cipher $1a$v|R5Hod@c!$P)8gU+-#<\"Gq&$+Oaa'\"@J}M/S2bX83*yUG{$rc1$"
         
         ]
+    admin_pass_eltex = [    
+    "username admin1 password encrypted fa0493346fcbe36062e179192c28c138ad10445f privilege 15",
+    "username admin3 password encrypted db10d0a16c58ee4ec297fa21696311f6d274073b privilege 15",
+    "username admin5 password encrypted d4d285c5b1c6fe3e8bc44e910efb17210a0f1ac7 privilege 15",
+    "username admin10 password encrypted 740dd218dfb1c15f704099e4da99452c59bcd3b0 privilege 15",
+    "username admintech password encrypted 1a9b4fe6e6ac9e622c1de2f321f8bdc113410edc privilege 15"
+    ]
     
-    
+    commands_http_eltex = [
+        "no ip http server"        
+        ]
+
+
     command_el = "sh clo"
     command_hu = 'dis ip int br'
     
@@ -92,13 +94,24 @@ if __name__ == "__main__":
     for dev in devices:
         #print(dev)
         if dev['device_type'] == 'eltex':
-            print(send_show_command(dev, "show run | i admin"))
-
+            #print('Device ip = ' + dev['host'] + ' -> ' + send_conf_commands(dev, "do sh run | i hostna"))
+            send_conf_commands(dev, commands_http_eltex)
+            send_conf_commands(dev, ["line ssh","exec-timeout 9 59"])
+            send_conf_commands(dev, admin_pass_eltex, cmd_verify=False)
+            print('Device ip = ' + dev['host'] + ' -> DONE eltex')
         elif dev['device_type'] == 'huawei':
-            #print(send_show_command(dev, command_hu))
-            send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
-            print("DONE")
+            print(send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
+            print(send_show_command(dev, "dis cur | i acl remote-admin-access inbound").strip())
+            print(send_show_command(dev, "dis cur | i ssh server acl").strip())
+            send_conf_commands(dev, ["teln serv dis", "y"], cmd_verify=False)
+            
+            
+            #send_conf_commands(dev, ["user-interface vty 0 4","idle-timeout 9 59"], cmd_verify=False)
+            #send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
+            #send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
+            print('Device ip = ' + dev['host'] + ' -> DONE huawei')
         elif dev['device_type'] == 'cisco_ios':
-            print(send_show_command(dev, "show run | i admin"))
-            #send_conf_commands(dev, commands_http_cisco)
-            #send_conf_commands(dev, admin_pass)
+            #print(send_show_command(dev, "show run | i admin"))
+            send_conf_commands(dev, commands_http_cisco)
+            send_conf_commands(dev, admin_pass_cisco)
+            print('Device ip = ' + dev['host'] + ' -> DONE cisco')
