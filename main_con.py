@@ -32,7 +32,8 @@ def send_show_command(device, command):
         return out
     except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
             #print(error)
-            print('Device ip = ' + device['host'] + ' not avaliable')
+            print(dev['host'] + ' device_ip ' + ' not avaliable')
+            return str("~ " + command + " ~ " + "UNDONE")
 
 
 def send_conf_commands(device, commands, cmd_verify=True):
@@ -43,7 +44,7 @@ def send_conf_commands(device, commands, cmd_verify=True):
             return out
     except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
             #print(error)
-            print('Device ip = ' + device['host'] + ' not avaliable')
+            print(dev['host'] + ' device_ip ' + ' not avaliable')
 
 
 if __name__ == "__main__":
@@ -95,23 +96,34 @@ if __name__ == "__main__":
         #print(dev)
         if dev['device_type'] == 'eltex':
             #print('Device ip = ' + dev['host'] + ' -> ' + send_conf_commands(dev, "do sh run | i hostna"))
+            print(dev['host'] + ' ' + send_show_command(dev, "sh sntp status | i Clock is").strip())
+            print(dev['host'] + ' ' + send_show_command(dev, "sh management access-class").strip())
+            send_conf_commands(dev, "no ip telnet server")
+            
+            
             send_conf_commands(dev, commands_http_eltex)
             send_conf_commands(dev, ["line ssh","exec-timeout 9 59"])
             send_conf_commands(dev, admin_pass_eltex, cmd_verify=False)
-            print('Device ip = ' + dev['host'] + ' -> DONE eltex')
+            print(dev['host'] + ' device_ip ' + '-> DONE eltex')
         elif dev['device_type'] == 'huawei':
-            print(send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
-            print(send_show_command(dev, "dis cur | i acl remote-admin-access inbound").strip())
-            print(send_show_command(dev, "dis cur | i ssh server acl").strip())
+            print(dev['host'] + ' ' + send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
+            print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i acl.*remote-admin-access").strip())
+            print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i ssh server acl").strip())
             send_conf_commands(dev, ["teln serv dis", "y"], cmd_verify=False)
             
             
-            #send_conf_commands(dev, ["user-interface vty 0 4","idle-timeout 9 59"], cmd_verify=False)
-            #send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
-            #send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
-            print('Device ip = ' + dev['host'] + ' -> DONE huawei')
+            send_conf_commands(dev, ["user-interface vty 0 4","idle-timeout 9 59"], cmd_verify=False)
+            send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
+            send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
+            print(dev['host'] + ' device_ip ' + '-> DONE huawei')
         elif dev['device_type'] == 'cisco_ios':
             #print(send_show_command(dev, "show run | i admin"))
+            print(dev['host'] + ' ' + send_show_command(dev, "sh ntp status | i Clock is"))
+            print(dev['host'] + ' ' + send_show_command(dev, "sh run | i access-class remote-admin-access in"))
+            send_conf_commands(dev, ["line vty 0 15","transport input ssh" , "exec-timeout 9 58"])
+            
+            
+            
             send_conf_commands(dev, commands_http_cisco)
             send_conf_commands(dev, admin_pass_cisco)
-            print('Device ip = ' + dev['host'] + ' -> DONE cisco')
+            print(dev['host'] + ' device_ip ' + '-> DONE cisco')
