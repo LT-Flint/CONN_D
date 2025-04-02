@@ -46,6 +46,18 @@ def send_conf_commands(device, commands, cmd_verify=True):
             #print(error)
             print(dev['host'] + ' device_ip ' + ' not avaliable')
 
+def send_huawei_save(device):
+    try:
+        with Netmiko(**device) as ssh:
+            out = ssh.send_command_timing("save", delay_factor=2)
+            out += ssh.send_command_timing("Y", delay_factor=2)
+            
+            #out = ssh.send_config_set(commands, cmd_verify=cmd_verify)
+            return out
+    except (NetmikoBaseException, NetmikoAuthenticationException, SSHException) as error:
+            #print(error)
+            print(dev['host'] + ' device_ip ' + ' not avaliable')
+
 
 if __name__ == "__main__":
     admins_dict = {
@@ -106,15 +118,18 @@ if __name__ == "__main__":
             send_conf_commands(dev, admin_pass_eltex, cmd_verify=False)
             print(dev['host'] + ' device_ip ' + '-> DONE eltex')
         elif dev['device_type'] == 'huawei':
-            print(dev['host'] + ' ' + send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
-            print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i acl.*remote-admin-access").strip())
-            print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i ssh server acl").strip())
-            send_conf_commands(dev, ["teln serv dis", "y"], cmd_verify=False)
+            #print(dev['host'] + ' ' + send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
+            #print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i acl.*remote-admin-access").strip())
+            #print(dev['host'] + ' ' + send_show_command(dev, "dis cur | i ssh server acl").strip())
+            #send_conf_commands(dev, ["teln serv dis", "y"], cmd_verify=False)
             
             
-            send_conf_commands(dev, ["user-interface vty 0 4","idle-timeout 9 59"], cmd_verify=False)
-            send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
-            send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
+            #send_conf_commands(dev, ["user-interface vty 0 4","idle-timeout 9 59"], cmd_verify=False)
+            #send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
+            #send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
+            
+            print(send_huawei_save(dev))
+            
             print(dev['host'] + ' device_ip ' + '-> DONE huawei')
         elif dev['device_type'] == 'cisco_ios':
             #print(send_show_command(dev, "show run | i admin"))
