@@ -46,10 +46,10 @@ def send_conf_commands(device, commands, cmd_verify=True):
             #print(error)
             print(dev['host'] + ' device_ip ' + ' not avaliable')
 
-def send_huawei_save(device):
+def send_save(device, command):
     try:
         with Netmiko(**device) as ssh:
-            out = ssh.send_command_timing("save", delay_factor=2)
+            out = ssh.send_command_timing(command, delay_factor=2)
             out += ssh.send_command_timing("Y", delay_factor=2)
             
             #out = ssh.send_config_set(commands, cmd_verify=cmd_verify)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     
     headers = ['device_type', 'host', 'username', 'password', 'secret','timeout']
 
-    with open('test_dev.csv', 'r', encoding='utf-8') as file:
+    with open('dev_0104.csv', 'r', encoding='utf-8') as file:
         reader = csv.DictReader(file, fieldnames=headers)  # задаём ключи вручную
         devices = [row for row in reader]
 
@@ -108,14 +108,15 @@ if __name__ == "__main__":
         #print(dev)
         if dev['device_type'] == 'eltex':
             #print('Device ip = ' + dev['host'] + ' -> ' + send_conf_commands(dev, "do sh run | i hostna"))
-            print(dev['host'] + ' ' + send_show_command(dev, "sh sntp status | i Clock is").strip())
-            print(dev['host'] + ' ' + send_show_command(dev, "sh management access-class").strip())
-            send_conf_commands(dev, "no ip telnet server")
+            #print(dev['host'] + ' ' + send_show_command(dev, "sh sntp status | i Clock is").strip())
+            #print(dev['host'] + ' ' + send_show_command(dev, "sh management access-class").strip())
+            #send_conf_commands(dev, "no ip telnet server")
             
             
-            send_conf_commands(dev, commands_http_eltex)
-            send_conf_commands(dev, ["line ssh","exec-timeout 9 59"])
-            send_conf_commands(dev, admin_pass_eltex, cmd_verify=False)
+            #send_conf_commands(dev, commands_http_eltex)
+            #send_conf_commands(dev, ["line ssh","exec-timeout 9 59"])
+            #send_conf_commands(dev, admin_pass_eltex, cmd_verify=False)
+            print(send_save(dev, "write"))
             print(dev['host'] + ' device_ip ' + '-> DONE eltex')
         elif dev['device_type'] == 'huawei':
             #print(dev['host'] + ' ' + send_show_command(dev, "dis ntp-ser sta | i clock status").strip())
@@ -128,17 +129,18 @@ if __name__ == "__main__":
             #send_conf_commands(dev, ["undo http server enable", "undo http secure-server enable"], cmd_verify=False)
             #send_conf_commands(dev, admin_pass_huawei, cmd_verify=False)
             
-            print(send_huawei_save(dev))
+            print(send_save(dev, "save"))
             
             print(dev['host'] + ' device_ip ' + '-> DONE huawei')
         elif dev['device_type'] == 'cisco_ios':
             #print(send_show_command(dev, "show run | i admin"))
-            print(dev['host'] + ' ' + send_show_command(dev, "sh ntp status | i Clock is"))
-            print(dev['host'] + ' ' + send_show_command(dev, "sh run | i access-class remote-admin-access in"))
-            send_conf_commands(dev, ["line vty 0 15","transport input ssh" , "exec-timeout 9 58"])
+            #print(dev['host'] + ' ' + send_show_command(dev, "sh ntp status | i Clock is"))
+            #print(dev['host'] + ' ' + send_show_command(dev, "sh run | i access-class remote-admin-access in"))
+            #send_conf_commands(dev, ["line vty 0 15","transport input ssh" , "exec-timeout 9 58"])
             
             
             
-            send_conf_commands(dev, commands_http_cisco)
-            send_conf_commands(dev, admin_pass_cisco)
+            #send_conf_commands(dev, commands_http_cisco)
+            #send_conf_commands(dev, admin_pass_cisco)
+            print(dev['host'] + ' ' + send_show_command(dev, "write").strip())
             print(dev['host'] + ' device_ip ' + '-> DONE cisco')
